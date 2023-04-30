@@ -1,0 +1,16 @@
+[package]
+name = "cattocol"
+version = "0.1.0"
+edition = "2021"
+authors = ["Karl Wulfert <pic16f877.ccs@emailn.de>"]
+readme = "README.md"
+repository = "https://github.com/pic16f877ccs/cattocol"
+homepage = "https://github.com/pic16f877ccs/cattocol"
+license = "GPL-3.0-or-later"
+description = "Combine two text into one text as columns."
+keywords = ["text", "combine-text", "format", "column", "concat"]
+categories = ["text-processing"]
+
+[dependencies]
+smallstr = "0.3.0"
+strip-ansi-escapes = "0.1.1"
