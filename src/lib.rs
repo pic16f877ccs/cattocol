@@ -13,7 +13,7 @@
 //! # Examples
 //!
 //! ```
-//! # use cattocol::*;
+//! # use cattocol::CatToCol;
 //!
 //! let txt_one = String::from("Text cat\nby line.\nTest line.");
 //! let txt_two = String::from("Concat text.\nTwo line.\nMin.\nMax");
@@ -28,6 +28,8 @@
 //! //           Max
 //!
 //! ```
+
+#[doc = include_str!("../README.md")]
 use smallstr::SmallString;
 use std::cmp::min;
 use std::iter;
