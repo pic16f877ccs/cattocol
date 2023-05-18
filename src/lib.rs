@@ -232,6 +232,35 @@ pub fn by_lines<'a>(first_str: &'a str, second_str: &'a str) -> impl Iterator<It
     })
 }
 
+/// Concatenating two strings by lines parwise returns an iterator.
+///
+/// - Lines are joined by whitespace.
+/// - Unpaired and empty lines are ignored.
+#[inline]
+pub fn by_pairs<'a>(first_str: &'a str, second_str: &'a str) -> impl Iterator<Item = &'a str> + 'a {
+    let first_iter = first_str.lines();
+    let mut second_iter = second_str.lines();
+
+    first_iter.flat_map(move |first_line| {
+        let mut takes = 0;
+        let second_line = if let Some(line) = second_iter.next() {
+            takes = usize::MAX;
+            line
+        } else {
+            ""
+        };
+
+        if first_line.is_empty() || second_line.is_empty() {
+            takes = 0;
+        };
+
+        iter::once(first_line)
+            .chain(iter::once(" ").chain(second_line.lines()).chain(iter::once("\n")))
+            .take(takes)
+    })
+}
+
+
 fn max_line_len(text: &str) -> usize {
     text.lines()
         .map(|line| line.chars().count())
@@ -545,6 +574,74 @@ mod tests {
         assert_eq!(&iter.collect::<String>(), "\n\n\n\n");
     }
 
+    #[test]
+    fn test_by_pairs_first_gt_second() {
+        let iter = by_pairs("one\ntwo\nthree\nprimary\nsecondary\n", "first\nsecond\n");
+        assert_eq!(
+            &iter.collect::<String>(),
+            "one first\ntwo second\n"
+        );
+    }
+
+    #[test]
+    fn test_by_pairs_first_eq_second() {
+        let iter = by_pairs("one\ntwo\nthree\n", "first\nsecond\nthird\n");
+        assert_eq!(
+            &iter.collect::<String>(),
+            "one first\ntwo second\nthree third\n"
+        );
+    }
+
+    #[test]
+    fn test_by_pairs_first_lt_second() {
+        let iter = by_pairs("one\ntwo\nthree\n", "first\nsecond\nthird\nfourth\nfifth\n");
+        assert_eq!(
+            &iter.collect::<String>(),
+            "one first\ntwo second\nthree third\n"
+        );
+    }
+
+    #[test]
+    fn test_by_pairs_first_empty() {
+        let iter = by_pairs("", "first\nsecond\nthird\nfourth\nfifth\n");
+        assert_eq!(&iter.collect::<String>(), "");
+    }
+
+    #[test]
+    fn test_by_pairs_second_empty() {
+        let iter = by_pairs("one\ntwo\nthree\n", "");
+        assert_eq!(&iter.collect::<String>(), "");
+    }
+
+    #[test]
+    fn test_by_pairs_first_second_empty() {
+        let iter = by_pairs("", "");
+        assert_eq!(&iter.collect::<String>(), "");
+    }
+
+    #[test]
+    fn test_by_pairs_first_newline() {
+        let iter = by_pairs("\n\n", "first\nsecond\n");
+        assert_eq!(&iter.collect::<String>(), "");
+    }
+
+    #[test]
+    fn test_by_pairs_first_newline_gt_second() {
+        let iter = by_pairs("one\ntwo\n\n\n", "first\nsecond\n");
+        assert_eq!(&iter.collect::<String>(), "one first\ntwo second\n");
+    }
+
+    #[test]
+    fn test_by_pairs_newlines() {
+        let iter = by_pairs("\n\n\n\n", "\n\n\n\n");
+        assert_eq!(&iter.collect::<String>(), "");
+    }
+
+    #[test]
+    fn test_by_pairs_second_newline() {
+        let iter = by_pairs("one\ntwo\n\n\n", "\n\n");
+        assert_eq!(&iter.collect::<String>(), "");
+    }
 }
 
 
