@@ -140,6 +140,27 @@ impl CatToCol {
 }
 
 /// Concatenating two texts line by line returns an iterator.
+///
+/// - Empty lines of the first text are concatenated with spaces.
+/// - No lines are ignored.
+/// # Examples
+///
+/// ```
+/// use cattocol::cat_to_col;
+/// let first_txt = "Combine\ntexts\none\nlinewise.\n\n";
+/// let second_txt = "two\ninto\ntext\n";
+/// let concatenated_txt = "Combine two\ntexts into\none text\nlinewise.\n\n";
+/// let text = cat_to_col(&first_txt, &second_txt).collect::<String>();
+///
+/// assert_eq!(text, concatenated_txt);
+///
+/// let first_txt = "Combine\ntexts\none\n";
+/// let second_txt = "two\ninto\ntext\nlinewise.\n\n";
+/// let concatenated_txt = "Combine two\ntexts into\none text\nlinewise.\n\n";
+/// let text = cat_to_col(&first_txt, &second_txt).collect::<String>();
+///
+/// assert_eq!(text, concatenated_txt);
+/// ```
 pub fn cat_to_col<'a>(str_one: &'a str, str_two: &'a str) -> impl Iterator<Item = &'a str> {
     let iter_one = str_one.lines();
     let iter_two = str_two.lines();
