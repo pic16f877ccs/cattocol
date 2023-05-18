@@ -14,7 +14,6 @@
 //!
 //! ```
 //! # use cattocol::CatToCol;
-//!
 //! let txt_one = String::from("Text cat\nby line.\nTest line.");
 //! let txt_two = String::from("Concat text.\nTwo line.\nMin.\nMax");
 //! let cat_to_col = CatToCol::new().fill(' ').repeat(1);
@@ -166,6 +165,52 @@ pub fn cat_to_col<'a>(str_one: &'a str, str_two: &'a str) -> impl Iterator<Item 
         )
 }
 
+/// Concatenating two strings by lines "\n" returns an iterator.
+///
+/// - Lines are joined by whitespace.
+/// - If the first text ends, the remaining lines of the second text are ignored.
+/// - No spaces are inserted before or after empty lines.
+/// # Examples
+///
+/// ```
+/// use cattocol::by_lines;
+///
+/// let iter = by_lines("one\ntwo\nthree\nfour\nfive\n", "first\nsecond\n");
+///
+/// assert_eq!(&iter.collect::<String>(), "one first\ntwo second\nthree\nfour\nfive\n");
+///
+/// let iter = by_lines("one\ntwo\nthree\n", "first\nsecond\nthird\nfourth\nfifth\n");
+///
+/// assert_eq!(&iter.collect::<String>(), "one first\ntwo second\nthree third\n");
+///
+/// ```
+#[inline]
+pub fn by_lines<'a>(first_str: &'a str, second_str: &'a str) -> impl Iterator<Item = &'a str> + 'a {
+    let first_iter = first_str.lines();
+    let mut second_iter = second_str.lines();
+
+    first_iter.flat_map(move |first_line| {
+        let mut space_take = 0;
+        let second_line = if let Some(line) = second_iter.next() {
+            if first_line.is_empty() || line.is_empty() {
+                space_take = 0
+            } else {
+                space_take = 1
+            };
+            line
+        } else {
+            ""
+        }
+        .lines();
+        iter::once(first_line).chain(
+            iter::once(" ")
+                .take(space_take)
+                .chain(second_line)
+                .chain(iter::once("\n")),
+        )
+    })
+}
+
 fn max_line_len(text: &str) -> usize {
     text.lines()
         .map(|line| line.chars().count())
@@ -176,6 +221,7 @@ fn max_line_len(text: &str) -> usize {
 fn max_line_len_no_esc(text: &str) -> usize {
     max_line_len(std::str::from_utf8(&strip(text).unwrap()).unwrap())
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -371,6 +417,111 @@ mod tests {
         println!("\n{txt_two}");
         println!("\n{texts}");
         assert_eq!(texts, txt_col);
+    }
+
+    #[test]
+    fn test_by_lines_first_gt_second() {
+        let iter = by_lines("one\ntwo\nthree\nprimary\nsecondary\n", "first\nsecond\n");
+        assert_eq!(
+            &iter.collect::<String>(),
+            "one first\ntwo second\nthree\nprimary\nsecondary\n"
+        );
+    }
+
+    #[test]
+    fn test_by_lines_first_eq_second() {
+        let iter = by_lines("one\ntwo\nthree\n", "first\nsecond\nthird\n");
+        assert_eq!(
+            &iter.collect::<String>(),
+            "one first\ntwo second\nthree third\n"
+        );
+    }
+
+    #[test]
+    fn test_by_lines_first_lt_second() {
+        let iter = by_lines("one\ntwo\nthree\n", "first\nsecond\nthird\nfourth\nfifth\n");
+        assert_eq!(
+            &iter.collect::<String>(),
+            "one first\ntwo second\nthree third\n"
+        );
+    }
+
+    #[test]
+    fn test_by_lines_first_empty() {
+        let iter = by_lines("", "first\nsecond\nthird\nfourth\nfifth\n");
+        assert_eq!(&iter.collect::<String>(), "");
+    }
+
+    #[test]
+    fn test_by_lines_second_empty() {
+        let iter = by_lines("one\ntwo\nthree\n", "");
+        assert_eq!(&iter.collect::<String>(), "one\ntwo\nthree\n");
+    }
+
+    #[test]
+    fn test_by_lines_first_second_empty() {
+        let iter = by_lines("", "");
+        assert_eq!(&iter.collect::<String>(), "");
+    }
+
+    #[test]
+    fn test_by_lines_first_second_newline() {
+        let iter = by_lines("\n", "\n");
+        assert_eq!(&iter.collect::<String>(), "\n");
+    }
+
+    #[test]
+    fn test_by_lines_first_empty_second_newline() {
+        let iter = by_lines("", "\n");
+        assert_eq!(&iter.collect::<String>(), "");
+    }
+
+    #[test]
+    fn test_by_lines_first_newline_second_empty() {
+        let iter = by_lines("\n", "");
+        assert_eq!(&iter.collect::<String>(), "\n");
+    }
+
+    #[test]
+    fn test_by_lines_first_two_newline_second_empty() {
+        let iter = by_lines("one\n\ntwo\n\nthree\n\n", "");
+        assert_eq!(&iter.collect::<String>(), "one\n\ntwo\n\nthree\n\n");
+    }
+
+    #[test]
+    fn test_by_lines_first_two_newline() {
+        let iter = by_lines("one\n\ntwo\n\nthree\n\n", "first\nsecond\n");
+        assert_eq!(
+            &iter.collect::<String>(),
+            "one first\nsecond\ntwo\n\nthree\n\n"
+        );
+    }
+
+    #[test]
+    fn test_by_lines_first_second_two_newline() {
+        let iter = by_lines("one\ntwo\n\nfour\n\nsix\n", "first\n\nthird\nfourth\n\n");
+        assert_eq!(
+            &iter.collect::<String>(),
+            "one first\ntwo\nthird\nfour fourth\n\nsix\n"
+        );
+    }
+
+    #[test]
+    fn test_by_lines_first_newline() {
+        let iter = by_lines("\n\n", "first\nsecond\n");
+        assert_eq!(&iter.collect::<String>(), "first\nsecond\n");
+    }
+
+    #[test]
+    fn test_by_lines_first_newline_gt_second() {
+        let iter = by_lines("\n\n\n\n", "first\nsecond\n");
+        assert_eq!(&iter.collect::<String>(), "first\nsecond\n\n\n");
+    }
+
+    #[test]
+    fn test_by_lines_newlines() {
+        let iter = by_lines("\n\n\n\n", "\n\n\n\n");
+        assert_eq!(&iter.collect::<String>(), "\n\n\n\n");
     }
 
 }
