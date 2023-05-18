@@ -196,14 +196,17 @@ pub fn cat_to_col<'a>(str_one: &'a str, str_two: &'a str) -> impl Iterator<Item 
 /// ```
 /// use cattocol::by_lines;
 ///
-/// let iter = by_lines("one\ntwo\nthree\nfour\nfive\n", "first\nsecond\n");
+/// let first_txt = "One green\nrides down";
+/// let second_txt = "brutal tractor\nthe street.";
+/// let concatenated_txt = by_lines(first_txt, second_txt).collect::<String>();
 ///
-/// assert_eq!(&iter.collect::<String>(), "one first\ntwo second\nthree\nfour\nfive\n");
+/// assert_eq!(&concatenated_txt, "One green brutal tractor\nrides down the street.\n");
 ///
-/// let iter = by_lines("one\ntwo\nthree\n", "first\nsecond\nthird\nfourth\nfifth\n");
+/// let first_txt = "One green\nrides down";
+/// let second_txt = "brutal tractor\nthe street.\nThe tractor\nhums and smokes.";
+/// let concatenated_txt = by_lines(first_txt, second_txt).collect::<String>();
 ///
-/// assert_eq!(&iter.collect::<String>(), "one first\ntwo second\nthree third\n");
-///
+/// assert_eq!(&concatenated_txt, "One green brutal tractor\nrides down the street.\n");
 /// ```
 #[inline]
 pub fn by_lines<'a>(first_str: &'a str, second_str: &'a str) -> impl Iterator<Item = &'a str> + 'a {
@@ -236,6 +239,23 @@ pub fn by_lines<'a>(first_str: &'a str, second_str: &'a str) -> impl Iterator<It
 ///
 /// - Lines are joined by whitespace.
 /// - Unpaired and empty lines are ignored.
+/// # Examples
+///
+/// ```
+/// use cattocol::by_pairs;
+///
+/// let first_txt = "one horsepower\ntwo horsepower\nthree horsepower\nfour horsepower\n";
+/// let second_txt = "per horse\ntwo horses\n";
+/// let concatenated_txt = by_pairs(first_txt, second_txt).collect::<String>();
+///
+/// assert_eq!( &concatenated_txt, "one horsepower per horse\ntwo horsepower two horses\n");
+///
+/// let first_txt = "red apple\ngreen pear\nyellow tomato\npurple eggplant\n";
+/// let second_txt = "";
+/// let concatenated_txt = by_pairs(first_txt, second_txt).collect::<String>();
+///
+/// assert_eq!( &concatenated_txt, "");
+/// ```
 #[inline]
 pub fn by_pairs<'a>(first_str: &'a str, second_str: &'a str) -> impl Iterator<Item = &'a str> + 'a {
     let first_iter = first_str.lines();
@@ -255,11 +275,14 @@ pub fn by_pairs<'a>(first_str: &'a str, second_str: &'a str) -> impl Iterator<It
         };
 
         iter::once(first_line)
-            .chain(iter::once(" ").chain(second_line.lines()).chain(iter::once("\n")))
+            .chain(
+                iter::once(" ")
+                    .chain(second_line.lines())
+                    .chain(iter::once("\n")),
+            )
             .take(takes)
     })
 }
-
 
 fn max_line_len(text: &str) -> usize {
     text.lines()
@@ -272,6 +295,7 @@ fn max_line_len_no_esc(text: &str) -> usize {
     max_line_len(std::str::from_utf8(&strip(text).unwrap()).unwrap())
 }
 
+#[rustfmt::skip]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -643,5 +667,3 @@ mod tests {
         assert_eq!(&iter.collect::<String>(), "");
     }
 }
-
-
