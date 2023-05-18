@@ -227,6 +227,16 @@ mod tests {
     }
 
     #[test]
+    fn cat_one_newline_txt() {
+        let txt_col = " Combine two texts\n into one text\nfrom two columns.\n";
+        let txt_two = "Combine two texts\ninto one text\nfrom two columns.";
+        let texts = cat_to_col("\n\n", &txt_two).collect::<String>();
+        println!("\n{txt_two}");
+        println!("\n{texts}");
+        assert_eq!(texts, txt_col);
+    }
+
+    #[test]
     fn cat_empty_txt() {
         let texts = cat_to_col("", "").collect::<String>();
         assert_eq!(texts, "");
@@ -249,6 +259,20 @@ mod tests {
         let txt_one = "Combine two texts\ninto one text\nfrom two columns.";
         let txt_two =
             "Returns an iterator\nfrom one\ntext of two\nmerged columns.\nCollect to String.";
+        let texts = cat_to_col.combine_col(&txt_one, &txt_two).collect::<String>();
+        println!("\n{txt_one}");
+        println!("\n{txt_two}");
+        println!("\n{texts}");
+        assert_eq!(texts, txt_col);
+    }
+
+    #[test]
+    fn combine_one_newline_two_txt() {
+        let cat_to_col = CatToCol::new().fill(' ').repeat(1);
+        let txt_col = "                  Returns an iterator\nfrom two columns. text of two\n                  merged columns.\n                  Collect to String.\n";
+        let txt_one = "\nfrom two columns.\n\n";
+        let txt_two =
+            "Returns an iterator\ntext of two\nmerged columns.\nCollect to String.";
         let texts = cat_to_col.combine_col(&txt_one, &txt_two).collect::<String>();
         println!("\n{txt_one}");
         println!("\n{txt_two}");
