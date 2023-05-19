@@ -6,26 +6,38 @@
     rustdoc::broken_intra_doc_links
 )]
 
-//! Combine two text into one text as columns or by lines.
-//!
+//! This crate provided various options for combining text.
 //! - Without the ansi escpe sequences.
 //! - With the ansi escpe sequences.
+//! - Along the lines of the first text.
+//! - Iteration on non empty lines.
 //! # Examples
 //!
 //! ```
-//! # use cattocol::CatToCol;
-//! let txt_one = String::from("Text cat\nby line.\nTest line.");
-//! let txt_two = String::from("Concat text.\nTwo line.\nMin.\nMax");
-//! let cat_to_col = CatToCol::new().fill(' ').repeat(1);
-//! let combine_iter = cat_to_col.combine_col(&txt_one, &txt_two);
+//! # use cattocol::{cat_to_col, CatToCol};
+//! let txt_one = String::from("It's a\nit's raining\nnortherly wind.");
+//! let txt_two = String::from("beautiful day,\nwith a\n\n");
+//! let cattocol = CatToCol::new().fill(' ').repeat(0);
+//! let concatenated_txt = "It's a         beautiful day,\nit's raining   with a\nnortherly wind.\n";
+//! let text = cattocol.combine_col(&txt_one, &txt_two).collect::<String>();
 //!
-//! println!("{}", combine_iter.collect::<String>());
+//! assert_eq!(text, concatenated_txt);
 //!
-//! //Text cat   Concat text.
-//! //by line.   Two line.
-//! //Test line. Min.
-//! //           Max
+//! println!("{}", text);
+//! //It's a         beautiful day,
+//! //it's raining   with a
+//! //northerly wind. 
 //!
+//! let concatenated_txt = "It's a beautiful day,\nit's raining with a\nnortherly wind. \n";
+//! let text = cat_to_col(&txt_one, &txt_two).collect::<String>();
+//!
+//! assert_eq!(text, concatenated_txt);
+//!
+//! println!("{}", text);
+//!
+//! //It's a beautiful day,
+//! //it's raining with a
+//! //northerly wind. 
 //! ```
 
 #[doc = include_str!("../README.md")]
@@ -186,7 +198,7 @@ pub fn cat_to_col<'a>(str_one: &'a str, str_two: &'a str) -> impl Iterator<Item 
         )
 }
 
-/// Concatenating two strings by lines "\n" returns an iterator.
+/// Concatenating two texts along the lines of the first text returns an iterator.
 ///
 /// - Lines are joined by whitespace.
 /// - If the first text ends, the remaining lines of the second text are ignored.
@@ -235,7 +247,7 @@ pub fn by_lines<'a>(first_str: &'a str, second_str: &'a str) -> impl Iterator<It
     })
 }
 
-/// Concatenating two strings by lines parwise returns an iterator.
+/// Concatenating two texts by lines parwise returns an iterator.
 ///
 /// - Lines are joined by whitespace.
 /// - Unpaired and empty lines are ignored.
