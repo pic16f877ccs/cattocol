@@ -301,7 +301,12 @@ pub fn by_pairs<'a>(first_str: &'a str, second_str: &'a str) -> impl Iterator<It
 /// - Lines are joined by whitespace.
 /// - If the first text ends, the remaining lines of the second text are ignored.
 /// - No spaces are inserted before or after empty lines.
+/// # Examples
 ///
+/// ```
+/// use cattocol::by_three_lines;
+///
+/// ```
 #[inline]
 pub fn by_three_lines<'a>(
     first_str: &'a str,
@@ -347,7 +352,20 @@ pub fn by_three_lines<'a>(
 /// - Lines are joined by whitespace.
 /// - If the first text ends, the remaining lines of the second text are ignored.
 /// - No spaces are inserted before or after empty lines.
+/// # Examples
 ///
+/// ```
+/// use cattocol::by_four_lines;
+///
+/// let first_txt = "One in english,\nEin in german,\n";
+/// let second_txt = "two in english,\nzwei in german,\n";
+/// let third_txt = "three in english,\ndrei in german,\n";
+/// let fourth_txt = "four in english.\nvier in german.\n";
+/// let concatenated_txt = by_four_lines(first_txt, second_txt, third_txt, fourth_txt).collect::<String>();
+///
+/// assert_eq!(&concatenated_txt, "One in english, two in english, three in english, four in english.\n\
+/// Ein in german, zwei in german, drei in german, vier in german.\n");
+/// ```
 #[inline]
 pub fn by_four_lines<'a>(
     first_str: &'a str,
