@@ -15,29 +15,30 @@
 //!
 //! ```
 //! # use cattocol::{cat_to_col, CatToCol};
-//! let txt_one = String::from("It's a\nit's raining\nnortherly wind.");
-//! let txt_two = String::from("beautiful day,\nwith a\n\n");
+//! let first_txt = String::from("It's a\nit's raining\nnortherly wind.");
+//! let second_txt = String::from("beautiful day,\nwith a\n\n");
 //! let cattocol = CatToCol::new().fill(' ').repeat(0);
-//! let concatenated_txt = "It's a         beautiful day,\nit's raining   with a\nnortherly wind.\n";
-//! let text = cattocol.combine_col(&txt_one, &txt_two).collect::<String>();
+//! let text = "It's a         beautiful day,\nit's raining   with a\nnortherly wind.\n";
+//! let concatenated_txt = cattocol.combine_col(&first_txt, &second_txt).collect::<String>();
 //!
-//! assert_eq!(text, concatenated_txt);
+//! assert_eq!(concatenated_txt, text);
 //!
-//! println!("{}", text);
+//! println!("{}", concatenated_txt);
+//!
 //! //It's a         beautiful day,
 //! //it's raining   with a
-//! //northerly wind. 
+//! //northerly wind.
 //!
-//! let concatenated_txt = "It's a beautiful day,\nit's raining with a\nnortherly wind. \n";
-//! let text = cat_to_col(&txt_one, &txt_two).collect::<String>();
+//! let text = "It's a beautiful day,\nit's raining with a\nnortherly wind. \n";
+//! let concatenated_txt = cat_to_col(&first_txt, &second_txt).collect::<String>();
 //!
-//! assert_eq!(text, concatenated_txt);
+//! assert_eq!(concatenated_txt, text);
 //!
-//! println!("{}", text);
+//! println!("{}", concatenated_txt);
 //!
 //! //It's a beautiful day,
 //! //it's raining with a
-//! //northerly wind. 
+//! //northerly wind.
 //! ```
 
 #[doc = include_str!("../README.md")]
@@ -161,17 +162,17 @@ impl CatToCol {
 /// use cattocol::cat_to_col;
 /// let first_txt = "Combine\ntexts\none\nlinewise.\n\n";
 /// let second_txt = "two\ninto\ntext\n";
-/// let concatenated_txt = "Combine two\ntexts into\none text\nlinewise.\n\n";
-/// let text = cat_to_col(&first_txt, &second_txt).collect::<String>();
+/// let text = "Combine two\ntexts into\none text\nlinewise.\n\n";
+/// let concatenated_txt = cat_to_col(&first_txt, &second_txt).collect::<String>();
 ///
-/// assert_eq!(text, concatenated_txt);
+/// assert_eq!(concatenated_txt, text);
 ///
 /// let first_txt = "Combine\ntexts\none\n";
 /// let second_txt = "two\ninto\ntext\nlinewise.\n\n";
-/// let concatenated_txt = "Combine two\ntexts into\none text\nlinewise.\n\n";
-/// let text = cat_to_col(&first_txt, &second_txt).collect::<String>();
+/// let text = "Combine two\ntexts into\none text\nlinewise.\n\n";
+/// let concatenated_txt = cat_to_col(&first_txt, &second_txt).collect::<String>();
 ///
-/// assert_eq!(text, concatenated_txt);
+/// assert_eq!(concatenated_txt, text);
 /// ```
 pub fn cat_to_col<'a>(str_one: &'a str, str_two: &'a str) -> impl Iterator<Item = &'a str> {
     let iter_one = str_one.lines();
@@ -293,6 +294,161 @@ pub fn by_pairs<'a>(first_str: &'a str, second_str: &'a str) -> impl Iterator<It
                     .chain(iter::once("\n")),
             )
             .take(takes)
+    })
+}
+
+/// Concatenating three texts along the lines of the first text returns an iterator.
+///
+/// - Lines are joined by whitespace.
+/// - If the first text ends, the remaining lines of the second text are ignored.
+/// - No spaces are inserted before or after empty lines.
+/// # Examples
+///
+/// ```
+/// use cattocol::by_three_lines;
+///
+/// let first_txt = "One season\nDecembre,\nIt's cold.\n";
+/// let second_txt = "a year\nJanuary,\n";
+/// let third_txt = "is winter.\nFebruary.\n";
+/// let text = "One season a year is winter.\nDecembre, January, February.\nIt's cold.\n";
+/// let concatenated_txt = by_three_lines(first_txt, second_txt, third_txt).collect::<String>();
+///
+/// assert_eq!( &concatenated_txt, text);
+///
+/// ```
+#[inline]
+pub fn by_three_lines<'a>(
+    first_str: &'a str,
+    second_str: &'a str,
+    third_str: &'a str,
+) -> impl Iterator<Item = &'a str> {
+    let first_iter = first_str.lines();
+    let mut second_iter = second_str.lines();
+    let mut third_iter = third_str.lines();
+
+    first_iter.flat_map(move |first_line| {
+        let mut first_space_take = 0;
+        let mut second_space_take = 0;
+        let first_line_notempty = !first_line.is_empty();
+        let mut second_line_notempty = false;
+        let mut second_line = "";
+        let mut third_line = "";
+
+        if let Some(line) = second_iter.next() {
+            second_line_notempty = !line.is_empty();
+            if first_line_notempty && second_line_notempty {
+                first_space_take = 1;
+            };
+            second_line = line;
+        }
+
+        if let Some(line) = third_iter.next() {
+            if (first_line_notempty || second_line_notempty) && !line.is_empty() {
+                second_space_take = 1;
+            };
+            third_line = line;
+        }
+
+        iter::once(first_line)
+            .chain(
+                iter::once(" ")
+                    .take(first_space_take)
+                    .chain(second_line.lines()),
+            )
+            .chain(
+                iter::once(" ")
+                    .take(second_space_take)
+                    .chain(third_line.lines()),
+            )
+            .chain(iter::once("\n"))
+    })
+}
+
+/// Concatenating four texts along the lines of the first text returns an iterator.
+///
+/// - Lines are joined by whitespace.
+/// - If the first text ends, the remaining lines of the second text are ignored.
+/// - No spaces are inserted before or after empty lines.
+/// # Examples
+///
+/// ```
+/// use cattocol::by_four_lines;
+///
+/// let first_txt = "One in english,\nEin in german,\n";
+/// let second_txt = "two in english,\nzwei in german,\n";
+/// let third_txt = "three in english,\ndrei in german,\n";
+/// let fourth_txt = "four in english.\nvier in german.\n";
+/// let text = "One in english, two in english, three in english, four in english.\n\
+///     Ein in german, zwei in german, drei in german, vier in german.\n";
+/// let concatenated_txt = by_four_lines(first_txt, second_txt, third_txt, fourth_txt).collect::<String>();
+///
+/// assert_eq!(&concatenated_txt, text);
+/// ```
+#[inline]
+pub fn by_four_lines<'a>(
+    first_str: &'a str,
+    second_str: &'a str,
+    third_str: &'a str,
+    fourth_str: &'a str,
+) -> impl Iterator<Item = &'a str> {
+    let first_iter = first_str.lines();
+    let mut second_iter = second_str.lines();
+    let mut third_iter = third_str.lines();
+    let mut fourth_iter = fourth_str.lines();
+
+    first_iter.flat_map(move |first_line| {
+        let mut first_space_take = 0;
+        let mut second_space_take = 0;
+        let mut third_space_take = 0;
+        let first_line_notempty = !first_line.is_empty();
+        let mut second_line_notempty = false;
+        let mut third_line_notempty = false;
+        let mut second_line = "";
+        let mut third_line = "";
+        let mut fourth_line = "";
+
+        if let Some(line) = second_iter.next() {
+            second_line_notempty = !line.is_empty();
+            if first_line_notempty && second_line_notempty {
+                first_space_take = 1;
+            };
+            second_line = line;
+        }
+
+        if let Some(line) = third_iter.next() {
+            third_line_notempty = !line.is_empty();
+            if (first_line_notempty || second_line_notempty) && !line.is_empty() {
+                second_space_take = 1;
+            };
+            third_line = line;
+        }
+
+        if let Some(line) = fourth_iter.next() {
+            if (first_line_notempty || second_line_notempty || third_line_notempty)
+                && !line.is_empty()
+            {
+                third_space_take = 1;
+            };
+            fourth_line = line;
+        }
+
+        iter::once(first_line)
+            .chain(
+                iter::once(" ")
+                    .take(first_space_take)
+                    .chain(second_line.lines()),
+            )
+            .chain(
+                iter::once(" ")
+                    .take(second_space_take)
+                    .chain(third_line.lines()),
+            )
+            .chain(
+                iter::once(" ")
+                    .take(third_space_take)
+                    .chain(fourth_line.lines()),
+            )
+            .chain(iter::once("\n"))
     })
 }
 
@@ -677,5 +833,335 @@ mod tests {
     fn test_by_pairs_second_newline() {
         let iter = by_pairs("one\ntwo\n\n\n", "\n\n");
         assert_eq!(&iter.collect::<String>(), "");
+    }
+
+    #[test]
+    fn test_by_three_lines_first_gt_second() {
+        let iter = by_three_lines("one\ntwo\nthree\nfour\n", "first\nsecond\n", "primary\nsecondary\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first primary\ntwo second secondary\nthree\nfour\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_first_eq_second() {
+        let iter = by_three_lines("one\ntwo\nthree\n", "first\nsecond\nthird\n", "primary\nsecondary\ntertiary\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first primary\ntwo second secondary\nthree third tertiary\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_first_lt_second() {
+        let iter = by_three_lines("one\ntwo\nthree\n", "first\nsecond\nthird\nfourth\nfifth\n", "primary\nsecondary\ntertiary\nquaternary\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first primary\ntwo second secondary\nthree third tertiary\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_first_empty() {
+        let iter = by_three_lines("", "first\nsecond\nthird\nfourth\nfifth\n", "primary\nsecondary\ntertiary\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_second_empty() {
+        let iter = by_three_lines("one\ntwo\nthree\n", "", "primary\nsecondary\ntertiary\nquaternary\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one primary\ntwo secondary\nthree tertiary\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_third_empty() {
+        let iter = by_three_lines("one\ntwo\nthree\n", "first\nsecond\nthird\nfourth\nfifth\n", "");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first\ntwo second\nthree third\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_first_newline() {
+        let iter = by_three_lines("\n\n\n", "first\nsecond\nthird\nfourth\nfifth\n", "primary\nsecondary\ntertiary\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "first primary\nsecond secondary\nthird tertiary\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_first_second_newline() {
+        let iter = by_three_lines("\n\n\n", "\n\n\n", "primary\nsecondary\ntertiary\nquaternary\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "primary\nsecondary\ntertiary\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_newlines() {
+        let iter = by_three_lines("\n\n\n\n", "\n\n\n\n", "\n\n\n\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "\n\n\n\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_second_third_newline() {
+        let iter = by_three_lines("one\ntwo\nthree\nfour\n", "\n\n", "\n\n\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one\ntwo\nthree\nfour\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_third_newline() {
+        let iter = by_three_lines("one\ntwo\nthree\nfour\n", "first\nsecond\n", "\n\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first\ntwo second\nthree\nfour\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_first_third_newline() {
+        let iter = by_three_lines("\n\n\n", "first\nsecond\nthird\nfourth\nfifth\n", "\n\n\n\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "first\nsecond\nthird\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_second_newline() {
+        let iter = by_three_lines("one\ntwo\nthree\nfour\n", "\n\n", "primary\nsecondary\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one primary\ntwo secondary\nthree\nfour\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_first_skip_one() {
+        let iter = by_three_lines("one\n\nthree\n", "first\nsecond\nthird\nfourth\nfifth\n", "primary\nsecondary\ntertiary\nquaternary\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first primary\nsecond secondary\nthree third tertiary\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_by_three_lines_skip_one() {
+        let iter = by_three_lines("one\n\nthree\n", "\nsecond\nthird\nfourth\nfifth\n", "primary\nsecondary\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one primary\nsecond secondary\nthree third\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_first_gt_second() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "first\nsecond\n", "primary\nsecondary\n", "uno\ndue\ntre\nquattro\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first primary uno\ntwo second secondary due\nthree tre\nfour quattro\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_first_empty() {
+        let iter = by_four_lines("", "first\nsecond\n", "primary\nsecondary\n", "uno\ndue\ntre\nquattro\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_second_empty() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "", "primary\nsecondary\n", "uno\ndue\ntre\nquattro\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one primary uno\ntwo secondary due\nthree tre\nfour quattro\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_third_empty() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "first\nsecond\n", "", "uno\ndue\ntre\nquattro\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first uno\ntwo second due\nthree tre\nfour quattro\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_fourth_empty() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "first\nsecond\n", "primary\nsecondary\n", "");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first primary\ntwo second secondary\nthree\nfour\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_second_third_empty() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "", "", "uno\ndue\ntre\nquattro\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one uno\ntwo due\nthree tre\nfour quattro\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_second_third_fourth_empty() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "", "", "");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one\ntwo\nthree\nfour\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_second_fourth_empty() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "", "primary\nsecondary\n", "");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one primary\ntwo secondary\nthree\nfour\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_first_newline() {
+        let iter = by_four_lines("\n\n\n\n", "first\nsecond\n", "primary\nsecondary\n", "uno\ndue\ntre\nquattro\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "first primary uno\nsecond secondary due\ntre\nquattro\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_first_second_newline() {
+        let iter = by_four_lines("\n\n\n\n", "\n\n", "primary\nsecondary\n", "uno\ndue\ntre\nquattro\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "primary uno\nsecondary due\ntre\nquattro\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_first_second_third_fourth_newline() {
+        let iter = by_four_lines("\n\n\n\n", "\n\n", "\n\n", "\n\n\n\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "\n\n\n\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_fourth_newline() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "first\nsecond\n", "primary\nsecondary\n", "\n\n\n\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first primary\ntwo second secondary\nthree\nfour\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_third_fourth_newline() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "first\nsecond\n", "\n\n", "\n\n\n\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first\ntwo second\nthree\nfour\n");
+
+        println!("{:?}", com_text);
+    }
+ 
+    #[test]
+    fn test_cat_four_lines_second_third_fourth_newline() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "\n\n", "\n\n", "\n\n\n\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one\ntwo\nthree\nfour\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_second_fourth_newline() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "\n\n", "primary\nsecondary\n", "\n\n\n\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one primary\ntwo secondary\nthree\nfour\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_first_thirdd_newline() {
+        let iter = by_four_lines("\n\n\n\n", "first\nsecond\n", "\n\n", "uno\ndue\ntre\nquattro\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "first uno\nsecond due\ntre\nquattro\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_second_third() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "\n\n", "\n\n", "uno\ndue\ntre\nquattro\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one uno\ntwo due\nthree tre\nfour quattro\n");
+
+        println!("{:?}", com_text);
+    }
+
+    #[test]
+    fn test_cat_four_lines_fourth_skip() {
+        let iter = by_four_lines("one\ntwo\nthree\nfour\n", "first\nsecond\n", "primary\nsecondary\n", "uno\n\n\nquattro\n");
+        let com_text = &iter.collect::<String>();
+
+        assert_eq!(com_text, "one first primary uno\ntwo second secondary\nthree\nfour quattro\n");
+
+        println!("{:?}", com_text);
     }
 }
