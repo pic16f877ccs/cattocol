@@ -306,6 +306,13 @@ pub fn by_pairs<'a>(first_str: &'a str, second_str: &'a str) -> impl Iterator<It
 /// ```
 /// use cattocol::by_three_lines;
 ///
+/// let first_txt = "One season\nDecembre,\nIt's cold.\n";
+/// let second_txt = "a year\nJanuary,\n";
+/// let third_txt = "is winter.\nFebruary.\n";
+/// let concatenated_txt = by_three_lines(first_txt, second_txt, third_txt).collect::<String>();
+///
+/// assert_eq!( &concatenated_txt, "One season a year is winter.\nDecembre, January, February.\nIt's cold.\n");
+///
 /// ```
 #[inline]
 pub fn by_three_lines<'a>(
@@ -361,7 +368,8 @@ pub fn by_three_lines<'a>(
 /// let second_txt = "two in english,\nzwei in german,\n";
 /// let third_txt = "three in english,\ndrei in german,\n";
 /// let fourth_txt = "four in english.\nvier in german.\n";
-/// let concatenated_txt = by_four_lines(first_txt, second_txt, third_txt, fourth_txt).collect::<String>();
+/// let concatenated_txt = by_four_lines(first_txt, second_txt, third_txt, fourth_txt)
+///     .collect::<String>();
 ///
 /// assert_eq!(&concatenated_txt, "One in english, two in english, three in english, four in english.\n\
 /// Ein in german, zwei in german, drei in german, vier in german.\n");
