@@ -70,12 +70,14 @@ impl CatToCol {
     }
 
     /// Changes the separator character.
+    #[inline]
     pub fn fill(mut self, fill: char) -> Self {
         self.fill = fill.into();
         self
     }
 
     /// Changes the repetition values.
+    #[inline]
     pub fn repeat(mut self, repeat: usize) -> Self {
         self.repeat = repeat;
         self
@@ -84,6 +86,7 @@ impl CatToCol {
     /// Combining two texts in columns separated by a character repeated N times.
     ///
     /// - Without the ansi escpe sequences.
+    #[inline]
     pub fn combine_col<'a>(
         &'a self,
         str_one: &'a str,
@@ -119,6 +122,7 @@ impl CatToCol {
     /// Combining two texts in columns separated by a character repeated N times.
     ///
     /// - With the ansi escpe sequences.  
+    #[inline]
     pub fn combine_col_esc<'a>(
         &'a self,
         str_one: &'a str,
@@ -174,6 +178,7 @@ impl CatToCol {
 ///
 /// assert_eq!(concatenated_txt, text);
 /// ```
+#[inline]
 pub fn cat_to_col<'a>(str_one: &'a str, str_two: &'a str) -> impl Iterator<Item = &'a str> {
     let iter_one = str_one.lines();
     let iter_two = str_two.lines();
@@ -452,6 +457,7 @@ pub fn by_four_lines<'a>(
     })
 }
 
+#[inline]
 fn max_line_len(text: &str) -> usize {
     text.lines()
         .map(|line| line.chars().count())
@@ -459,6 +465,7 @@ fn max_line_len(text: &str) -> usize {
         .unwrap_or(0)
 }
 
+#[inline]
 fn max_line_len_no_esc(text: &str) -> usize {
     max_line_len(std::str::from_utf8(&strip(text).unwrap()).unwrap())
 }
